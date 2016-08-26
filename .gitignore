@@ -1,3 +1,6 @@
+.idea
+/test.json
+/test.sql
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
