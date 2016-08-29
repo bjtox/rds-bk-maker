@@ -5,7 +5,7 @@
 pip install bkmaker
 ```
 
-
+## Usage
 Python script to facilitate backups from your rds instance directly on S3
 
 You have to provide a config file in json format.
