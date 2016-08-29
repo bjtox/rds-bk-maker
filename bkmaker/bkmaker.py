@@ -32,19 +32,27 @@ def pushToS3(bucket, key_path, key_name, json):
     return False
 
 def get_back_up(user, password, host, db, tunneling):
-  if tunneling["enable"]:
-    print(getCurrentTime()+" - Tunneling It has been enabled by the bastion Host: "+ tunneling["bastion_host"])
-    result = os.popen('ssh -i %s %s@%s \'mysqldump -u %s -p${%s} -h %s %s \' > /dev/null 2>&1' % (
-      tunneling["key_pair"],
-      tunneling["bastion_user"],
-      tunneling["bastion_host"],
-      user,
-      password,
-      host,db)).read()
-  else:
-    result = os.popen('mysqldump -u %s -p%s -h %s %s > /dev/null 2>&1' % (user, password, host, db)).read()
+  try:
+    if tunneling["enable"]:
+      print(getCurrentTime() + " - Tunneling It has been enabled by the bastion Host: " + tunneling["bastion_host"])
+      result = os.popen('ssh -i %s %s@%s \'mysqldump -u %s -p%s -h %s %s\'' % (
+        tunneling["key_pair"],
+        tunneling["bastion_user"],
+        tunneling["bastion_host"],
+        user,
+        password,
+        host, db)).read()
+    else:
+      result = os.popen('mysqldump -u %s -p%s -h %s %s' % (user, password, host, db)).read()
+    return result
+  except OSError as e:
+    print "OSError > ", e.errno
+    print "OSError > ", e.strerror
+    print "OSError > ", e.filename
+  except:
+    print "Error > ", sys.exc_info()[0]
 
-  return result
+
 
 def mycallback(x):
   print('mycallback is called with')
@@ -66,18 +74,19 @@ def main():
 
   print(getCurrentTime()+" Wait, db dumping started for "+data["connection"]["database"]+" schema... ")
 
-
-  result = pushToS3(
-    data["s3Location"]["bucket"],
-    data["s3Location"]["key_path"],
-    time+'-'+data["s3Location"]["key_name"],
-    get_back_up(
+  backUp = get_back_up(
       data["connection"]["user"],
       data["connection"]["password"],
       data["connection"]["host"],
       data["connection"]["database"],
       data["tunneling"]
     )
+
+  result = pushToS3(
+    data["s3Location"]["bucket"],
+    data["s3Location"]["key_path"],
+    time+'-'+data["s3Location"]["key_name"],
+    backUp
   )
 
   if result:
