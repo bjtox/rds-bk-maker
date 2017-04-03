@@ -14,11 +14,11 @@ import json
 
 def getCurrentTime():
   i = datetime.now()
-  return i.strftime('[%Y-%m-%d %H:%M:%S]')
+  return i.strftime('%Y%m%d%H%M%S')
 
 
-def pushToS3(bucket, key_path, key_name, json):
-  s3 = boto3.client('s3', region_name='eu-west-1')
+def pushToS3(bucket, key_path, region, key_name, json):
+  s3 = boto3.client('s3', region_name=region)
   key = key_path+key_name
   try:
     response = s3.put_object(
@@ -43,7 +43,9 @@ def get_back_up(user, password, host, db, tunneling):
         password,
         host, db)).read()
     else:
-      result = os.popen('mysqldump -u %s -p%s -h %s %s' % (user, password, host, db)).read()
+      print(getCurrentTime() + " - Tunneling It has been Disabled")
+      print 'mysqldump -u %s -p"%s" -h %s %s' % (user, password, host, db)
+      result = os.popen('mysqldump -u %s -p\'%s\' -h %s %s' % (user, password, host, db)).read()
     return result
   except OSError as e:
     print "OSError > ", e.errno
@@ -85,11 +87,12 @@ def main():
   result = pushToS3(
     data["s3Location"]["bucket"],
     data["s3Location"]["key_path"],
+    data["s3Location"]["region"],
     time+'-'+data["s3Location"]["key_name"],
     backUp
   )
 
   if result:
-    print(getCurrentTime()+" - Db dumping done on a S3 Bucket Named: "+data["s3Location"]["bucket"]+" -> with this Key: "+data["s3Location"]["key_path"]+data["s3Location"]["key_name"])
+    print(getCurrentTime()+" - Db dumping done on a S3 Bucket Named: "+data["s3Location"]["bucket"]+" -> with this Key: "+data["s3Location"]["key_path"]+time+'-'+data["s3Location"]["key_name"])
   else:
     print(getCurrentTime()+" Db dumping failed!")
