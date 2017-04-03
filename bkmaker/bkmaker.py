@@ -31,11 +31,7 @@ def pushToS3(bucket, key_path, region, key_name, json):
     print e
     return False
 
-def get_back_up(connection, tunneling):
-  user = connection["user"],
-  password = connection["password"],
-  host = connection["host"],
-  db = connection["database"],
+def get_back_up(user, password, host, db, tunneling):
   try:
     if tunneling["enable"]:
       print(getCurrentTime() + " - Tunneling It has been enabled by the bastion Host: " + tunneling["bastion_host"])
@@ -64,7 +60,7 @@ def mycallback(x):
   print('mycallback is called with')
 
 def main():
-
+  time = getCurrentTime()
   usage = "usage: %prog [options] arg"
   parser = OptionParser()
   parser.add_option("-j", "--config-file", dest="config_file", help="pass a json file with specification", metavar="CONFIG-FILE")
@@ -81,19 +77,18 @@ def main():
   print(getCurrentTime()+" Wait, db dumping started for "+data["connection"]["database"]+" schema... ")
 
   backUp = get_back_up(
-      data["connection"],
+      data["connection"]["user"],
+      data["connection"]["password"],
+      data["connection"]["host"],
+      data["connection"]["database"],
       data["tunneling"]
     )
 
   result = pushToS3(
-<<<<<<< HEAD
-    data["s3Location"],
-=======
     data["s3Location"]["bucket"],
     data["s3Location"]["key_path"],
     data["s3Location"]["region"],
     time+'-'+data["s3Location"]["key_name"],
->>>>>>> 2114c754218fcccc4ad938ec8a61542b80ca8651
     backUp
   )
 
