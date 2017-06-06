@@ -23,7 +23,8 @@ You have to provide a config file in json format.
   "s3Location":{
     "bucket": "bucket_name",
     "key_path": "key_path_of_file",//in case of no path leave blank
-    "key_name": "name_of_file"
+    "key_name": "name_of_file",
+    "region": "region Name"
   },
   "tunneling":{
     "enable" : false,

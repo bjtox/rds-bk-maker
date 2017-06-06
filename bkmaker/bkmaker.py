@@ -17,8 +17,13 @@ def getCurrentTime():
   return i.strftime('%Y%m%d%H%M%S')
 
 
-def pushToS3(bucket, key_path, region, key_name, json):
-  s3 = boto3.client('s3', region_name=region)
+def pushToS3(bucket, key_path, region, key_name, json, profile):
+  if profile!=None:
+    session = boto3.Session(profile_name=profile)
+    s3 = session.client('s3',region_name=region)
+  else:
+    s3 = boto3.client('s3', region_name=region)
+  
   key = key_path+key_name
   try:
     response = s3.put_object(
@@ -64,6 +69,7 @@ def main():
   usage = "usage: %prog [options] arg"
   parser = OptionParser()
   parser.add_option("-j", "--config-file", dest="config_file", help="pass a json file with specification", metavar="CONFIG-FILE")
+  parser.add_option("-p", "--profile", dest="profile",help="use Specific Profile", metavar="PROFILE")
 
   (options, args) = parser.parse_args()
   if not options.config_file:  # if filename is not given
@@ -89,7 +95,8 @@ def main():
     data["s3Location"]["key_path"],
     data["s3Location"]["region"],
     time+'-'+data["s3Location"]["key_name"],
-    backUp
+    backUp,
+    options.profile
   )
 
   if result:
